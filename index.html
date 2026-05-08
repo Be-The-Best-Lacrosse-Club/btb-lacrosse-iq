@@ -1,0 +1,1265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BTB Lacrosse IQ — Intelligence Library</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            btbred: '#D22630',
+            btbdark: '#0a0a0a',
+            btbgray: '#111111',
+            btbcard: '#161616',
+            btbborder: '#222222',
+            btbmid: '#2a2a2a',
+          },
+          fontFamily: {
+            bebas: ['Bebas Neue', 'sans-serif'],
+            mont: ['Montserrat', 'sans-serif'],
+          },
+        }
+      }
+    }
+  </script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      background-color: #0a0a0a;
+      color: #ffffff;
+      font-family: 'Montserrat', sans-serif;
+      min-height: 100vh;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #111; }
+    ::-webkit-scrollbar-thumb { background: #D22630; border-radius: 3px; }
+
+    /* Nav underline animation */
+    .nav-link::after {
+      content: '';
+      display: block;
+      height: 2px;
+      background: #D22630;
+      transform: scaleX(0);
+      transition: transform 0.2s ease;
+    }
+    .nav-link:hover::after, .nav-link.active::after { transform: scaleX(1); }
+
+    /* Hero grain overlay */
+    .hero-grain::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* Glow button */
+    .btn-red {
+      background: #D22630;
+      color: white;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      transition: all 0.2s ease;
+      box-shadow: 0 0 0 0 rgba(210,38,48,0);
+    }
+    .btn-red:hover {
+      background: #e8303b;
+      box-shadow: 0 0 20px rgba(210,38,48,0.4);
+      transform: translateY(-1px);
+    }
+    .btn-red:active { transform: translateY(0); }
+
+    /* Card hover */
+    .moment-card {
+      background: #161616;
+      border: 1px solid #222;
+      border-radius: 12px;
+      overflow: hidden;
+      transition: all 0.25s ease;
+      cursor: pointer;
+    }
+    .moment-card:hover {
+      border-color: #D22630;
+      transform: translateY(-3px);
+      box-shadow: 0 12px 40px rgba(210,38,48,0.15);
+    }
+
+    /* Tag pill colors by category */
+    .tag-dodging { background: rgba(59,130,246,0.2); color: #93c5fd; border: 1px solid rgba(59,130,246,0.3); }
+    .tag-finishing { background: rgba(210,38,48,0.2); color: #fca5a5; border: 1px solid rgba(210,38,48,0.3); }
+    .tag-feeding { background: rgba(168,85,247,0.2); color: #d8b4fe; border: 1px solid rgba(168,85,247,0.3); }
+    .tag-defense { background: rgba(234,179,8,0.2); color: #fde047; border: 1px solid rgba(234,179,8,0.3); }
+    .tag-faceoff { background: rgba(249,115,22,0.2); color: #fdba74; border: 1px solid rgba(249,115,22,0.3); }
+    .tag-transition { background: rgba(20,184,166,0.2); color: #5eead4; border: 1px solid rgba(20,184,166,0.3); }
+    .tag-clear { background: rgba(16,185,129,0.2); color: #6ee7b7; border: 1px solid rgba(16,185,129,0.3); }
+    .tag-special { background: rgba(236,72,153,0.2); color: #f9a8d4; border: 1px solid rgba(236,72,153,0.3); }
+    .tag-xbehind { background: rgba(99,102,241,0.2); color: #a5b4fc; border: 1px solid rgba(99,102,241,0.3); }
+    .tag-offball { background: rgba(107,114,128,0.2); color: #d1d5db; border: 1px solid rgba(107,114,128,0.3); }
+    .tag-communication { background: rgba(245,158,11,0.2); color: #fcd34d; border: 1px solid rgba(245,158,11,0.3); }
+    .tag-default { background: rgba(255,255,255,0.1); color: #e5e7eb; border: 1px solid rgba(255,255,255,0.15); }
+
+    /* Input styles */
+    .btb-input {
+      background: #161616;
+      border: 1px solid #2a2a2a;
+      color: white;
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 14px;
+      transition: border-color 0.2s;
+      width: 100%;
+      outline: none;
+    }
+    .btb-input:focus { border-color: #D22630; }
+    .btb-input::placeholder { color: #555; }
+
+    /* Search input large */
+    .search-input {
+      background: #161616;
+      border: 2px solid #2a2a2a;
+      color: white;
+      border-radius: 50px;
+      padding: 18px 28px;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 16px;
+      width: 100%;
+      outline: none;
+      transition: all 0.2s;
+    }
+    .search-input:focus {
+      border-color: #D22630;
+      box-shadow: 0 0 30px rgba(210,38,48,0.1);
+    }
+    .search-input::placeholder { color: #444; }
+
+    /* Pulse animation for analyzing */
+    @keyframes pulse-red {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+    .pulse-red { animation: pulse-red 1.5s ease-in-out infinite; }
+
+    /* Tab active */
+    .tab-btn.active {
+      border-bottom: 3px solid #D22630;
+      color: white;
+    }
+    .tab-btn {
+      color: #666;
+      border-bottom: 3px solid transparent;
+      transition: all 0.2s;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      padding: 12px 20px;
+      cursor: pointer;
+      font-size: 13px;
+      text-transform: uppercase;
+    }
+    .tab-btn:hover { color: #ccc; }
+
+    /* Filter pill */
+    .filter-pill {
+      background: #1a1a1a;
+      border: 1px solid #333;
+      color: #888;
+      border-radius: 20px;
+      padding: 6px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .filter-pill:hover { border-color: #D22630; color: #D22630; }
+    .filter-pill.active { background: #D22630; border-color: #D22630; color: white; }
+
+    /* Play button overlay */
+    .play-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,0.4);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .moment-card:hover .play-overlay { opacity: 1; }
+
+    /* Difficulty badge */
+    .diff-beginner { background: rgba(16,185,129,0.15); color: #34d399; }
+    .diff-intermediate { background: rgba(59,130,246,0.15); color: #60a5fa; }
+    .diff-advanced { background: rgba(249,115,22,0.15); color: #fb923c; }
+    .diff-elite { background: rgba(210,38,48,0.15); color: #f87171; }
+
+    /* Game card */
+    .game-card {
+      background: #161616;
+      border: 1px solid #222;
+      border-radius: 12px;
+      overflow: hidden;
+      transition: all 0.25s;
+      cursor: pointer;
+    }
+    .game-card:hover {
+      border-color: #D22630;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(210,38,48,0.12);
+    }
+
+    /* Status bar */
+    .status-bar {
+      background: #0f0f0f;
+      border: 1px solid #1a1a1a;
+      border-radius: 10px;
+      padding: 16px 20px;
+    }
+
+    /* Concept chain display */
+    .concept-chain {
+      font-size: 11px;
+      color: #888;
+      font-weight: 500;
+      letter-spacing: 0.03em;
+    }
+    .concept-chain span { color: #D22630; }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #444;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-left: 4px solid #D22630;
+      border-radius: 8px;
+      padding: 14px 20px;
+      max-width: 360px;
+      z-index: 9999;
+      transform: translateX(120%);
+      transition: transform 0.3s ease;
+      font-size: 14px;
+    }
+    .toast.show { transform: translateX(0); }
+    .toast.success { border-left-color: #10b981; }
+    .toast.error { border-left-color: #D22630; }
+
+    /* Loading skeleton */
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+    .skeleton {
+      background: linear-gradient(90deg, #1a1a1a 25%, #222 50%, #1a1a1a 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: 6px;
+    }
+
+    /* Hero red line */
+    .hero-line {
+      width: 80px;
+      height: 4px;
+      background: #D22630;
+      margin: 20px auto;
+    }
+
+    /* Section divider */
+    .section-divider {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      margin: 48px 0;
+    }
+
+    /* Progress bar */
+    .progress-bar {
+      height: 3px;
+      background: #1a1a1a;
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #D22630, #ff6b75);
+      border-radius: 2px;
+      transition: width 0.3s ease;
+    }
+
+    /* Chevron icon */
+    .chevron { transition: transform 0.2s; }
+    .chevron.open { transform: rotate(180deg); }
+
+    /* Category section */
+    .category-section {
+      border: 1px solid #1e1e1e;
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+    .category-header {
+      background: #111;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+    }
+    .category-header:hover { background: #161616; }
+
+    @media (max-width: 640px) {
+      .search-input { font-size: 14px; padding: 14px 20px; }
+    }
+  </style>
+</head>
+<body class="bg-btbdark">
+
+  <!-- NAV -->
+  <nav class="sticky top-0 z-50 bg-btbdark border-b border-btbborder" style="backdrop-filter: blur(20px); background: rgba(10,10,10,0.95);">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between h-16">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 bg-btbred rounded-sm flex items-center justify-center">
+          <span class="font-bebas text-white text-lg leading-none">B</span>
+        </div>
+        <span class="font-bebas text-white text-2xl tracking-widest">BTB LACROSSE IQ</span>
+      </div>
+      <div class="hidden md:flex items-center gap-1">
+        <button class="nav-link tab-btn active" onclick="switchTab('search')">Search</button>
+        <button class="nav-link tab-btn" onclick="switchTab('catalogue')">Catalogue</button>
+        <button class="nav-link tab-btn" onclick="switchTab('drillbook')">Drill Book</button>
+        <button class="nav-link tab-btn" onclick="switchTab('academy')">Academy</button>
+        <button class="nav-link tab-btn" onclick="switchTab('add')">+ Add Video</button>
+      </div>
+      <!-- Mobile menu -->
+      <button class="md:hidden text-white p-2" onclick="toggleMobileMenu()">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    <!-- Mobile dropdown -->
+    <div id="mobileMenu" class="hidden md:hidden bg-btbgray border-t border-btbborder">
+      <div class="px-4 py-3 flex flex-col gap-1">
+        <button class="tab-btn text-left active" onclick="switchTab('search'); toggleMobileMenu()">Search</button>
+        <button class="tab-btn text-left" onclick="switchTab('catalogue'); toggleMobileMenu()">Catalogue</button>
+        <button class="tab-btn text-left" onclick="switchTab('drillbook'); toggleMobileMenu()">Drill Book</button>
+        <button class="tab-btn text-left" onclick="switchTab('academy'); toggleMobileMenu()">Academy</button>
+        <button class="tab-btn text-left" onclick="switchTab('add'); toggleMobileMenu()">+ Add Video</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="relative hero-grain overflow-hidden" style="background: linear-gradient(180deg, #0d0d0d 0%, #0a0a0a 100%);">
+    <div class="absolute inset-0 pointer-events-none" style="background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(210,38,48,0.08) 0%, transparent 70%);"></div>
+    <div class="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 text-center py-20 sm:py-28">
+      <div class="inline-flex items-center gap-2 bg-btbred/10 border border-btbred/20 rounded-full px-4 py-2 mb-8">
+        <div class="w-2 h-2 bg-btbred rounded-full pulse-red"></div>
+        <span class="text-btbred text-xs font-bold uppercase tracking-widest">Powered by Gemini 2.5 Flash</span>
+      </div>
+      <h1 class="font-bebas text-7xl sm:text-9xl tracking-widest text-white leading-none mb-2">BTB LACROSSE IQ</h1>
+      <div class="hero-line"></div>
+      <p class="text-xl sm:text-2xl font-light text-gray-300 tracking-wide mb-3">Find any concept. Any moment. Instantly.</p>
+      <p class="text-gray-500 text-sm max-w-xl mx-auto mb-10">Paste a YouTube link. Gemini analyzes every play. Search any concept — split dodge, backpipe feed, step-down slide — and get the exact timestamp.</p>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <button class="btn-red px-8 py-4 rounded-full text-sm uppercase tracking-wider" onclick="switchTab('add')">
+          + Catalogue a Video
+        </button>
+        <button class="bg-transparent border border-gray-600 text-gray-300 px-8 py-4 rounded-full text-sm uppercase tracking-wider hover:border-gray-400 transition-all font-bold" onclick="switchTab('search')">
+          Search Library
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- MAIN CONTENT -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 py-12">
+
+    <!-- ===== SEARCH TAB ===== -->
+    <section id="tab-search" class="tab-content">
+      <div class="text-center mb-10">
+        <h2 class="font-bebas text-5xl tracking-widest text-white mb-2">CONCEPT SEARCH</h2>
+        <p class="text-gray-500 text-sm">Search across every tagged moment in the library</p>
+      </div>
+
+      <!-- Big search bar -->
+      <div class="relative max-w-3xl mx-auto mb-8">
+        <div class="absolute left-5 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+          </svg>
+        </div>
+        <input
+          type="text"
+          id="searchInput"
+          class="search-input pl-14 pr-5"
+          placeholder="two-man game throwback backpipe feed..."
+          autocomplete="off"
+        />
+        <div class="absolute right-5 top-1/2 -translate-y-1/2" id="searchSpinner" style="display:none;">
+          <div class="w-5 h-5 border-2 border-btbred border-t-transparent rounded-full" style="animation: spin 0.8s linear infinite;"></div>
+        </div>
+      </div>
+
+      <!-- Filter pills -->
+      <div class="flex flex-wrap gap-2 justify-center mb-4" id="categoryFilters">
+        <span class="text-gray-600 text-xs font-bold uppercase tracking-wider self-center mr-1">Category:</span>
+        <button class="filter-pill active" data-filter="category" data-value="">All</button>
+        <button class="filter-pill" data-filter="category" data-value="Dodging">Dodging</button>
+        <button class="filter-pill" data-filter="category" data-value="Finishing">Finishing</button>
+        <button class="filter-pill" data-filter="category" data-value="Feeding">Feeding</button>
+        <button class="filter-pill" data-filter="category" data-value="Defense">Defense</button>
+        <button class="filter-pill" data-filter="category" data-value="Faceoff">Faceoff</button>
+        <button class="filter-pill" data-filter="category" data-value="Transition">Transition</button>
+        <button class="filter-pill" data-filter="category" data-value="Clear/Ride">Clear/Ride</button>
+        <button class="filter-pill" data-filter="category" data-value="X Behind">X Behind</button>
+        <button class="filter-pill" data-filter="category" data-value="Off-Ball">Off-Ball</button>
+      </div>
+      <div class="flex flex-wrap gap-2 justify-center mb-8">
+        <span class="text-gray-600 text-xs font-bold uppercase tracking-wider self-center mr-1">Difficulty:</span>
+        <button class="filter-pill active" data-filter="difficulty" data-value="">All</button>
+        <button class="filter-pill" data-filter="difficulty" data-value="Beginner">Beginner</button>
+        <button class="filter-pill" data-filter="difficulty" data-value="Intermediate">Intermediate</button>
+        <button class="filter-pill" data-filter="difficulty" data-value="Advanced">Advanced</button>
+        <button class="filter-pill" data-filter="difficulty" data-value="Elite">Elite</button>
+      </div>
+
+      <!-- Results count -->
+      <div class="flex items-center justify-between mb-6" id="resultsHeader" style="display:none!important;">
+        <span class="text-gray-400 text-sm" id="resultsCount"></span>
+        <div class="flex gap-2">
+          <button class="filter-pill active" data-view="grid" onclick="setView('grid')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="inline"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+          </button>
+          <button class="filter-pill" data-view="list" onclick="setView('list')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="inline"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Results grid -->
+      <div id="searchResults" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <!-- Initial empty state -->
+        <div class="col-span-full empty-state" id="searchEmpty">
+          <div class="text-6xl mb-4">🥍</div>
+          <p class="text-gray-400 text-lg font-semibold mb-2">Ready to search</p>
+          <p class="text-gray-600 text-sm">Type a concept above — dodge, feed, finish, set play...</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== ADD VIDEO TAB ===== -->
+    <section id="tab-add" class="tab-content hidden">
+      <div class="max-w-2xl mx-auto">
+        <div class="text-center mb-10">
+          <h2 class="font-bebas text-5xl tracking-widest text-white mb-2">ANALYSE & CATALOGUE</h2>
+          <p class="text-gray-500 text-sm">Paste a YouTube URL and Gemini will tag every concept in the film</p>
+        </div>
+
+        <div class="bg-btbcard border border-btbborder rounded-2xl p-8">
+          <div class="space-y-5">
+            <!-- YouTube URL -->
+            <div>
+              <label class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2 block">YouTube URL *</label>
+              <div class="relative">
+                <div class="absolute left-3 top-1/2 -translate-y-1/2 text-red-500">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M23.495 6.205a3.007 3.007 0 0 0-2.088-2.088c-1.87-.501-9.396-.501-9.396-.501s-7.507-.01-9.396.501A3.007 3.007 0 0 0 .527 6.205a31.247 31.247 0 0 0-.522 5.805 31.247 31.247 0 0 0 .522 5.783 3.007 3.007 0 0 0 2.088 2.088c1.868.502 9.396.502 9.396.502s7.506 0 9.396-.502a3.007 3.007 0 0 0 2.088-2.088 31.247 31.247 0 0 0 .5-5.783 31.247 31.247 0 0 0-.5-5.805zM9.609 15.601V8.408l6.264 3.602z"/>
+                  </svg>
+                </div>
+                <input type="url" id="ytUrl" class="btb-input pl-10" placeholder="https://youtube.com/watch?v=..." />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <!-- Game Title -->
+              <div class="col-span-2">
+                <label class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2 block">Game / Video Title *</label>
+                <input type="text" id="gameTitle" class="btb-input" placeholder="e.g. Maryland vs Virginia 2024" />
+              </div>
+              <!-- Level -->
+              <div>
+                <label class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2 block">Level / Grad Year</label>
+                <select id="levelSelect" class="btb-input" style="cursor:pointer; appearance:none; background-image: url(\"data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 7L11 1' stroke='%23666' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E\"); background-repeat: no-repeat; background-position: right 12px center;">
+                  <option value="">Select Level</option>
+                  <option>2024</option>
+                  <option>2025</option>
+                  <option>2026</option>
+                  <option>2027</option>
+                  <option>2028</option>
+                  <option>2029</option>
+                  <option>2030</option>
+                  <option>College</option>
+                  <option>Pro / MLL / PLL</option>
+                  <option>Varsity</option>
+                  <option>JV</option>
+                  <option>Youth</option>
+                </select>
+              </div>
+              <!-- Team -->
+              <div>
+                <label class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2 block">Team / Program</label>
+                <input type="text" id="teamInput" class="btb-input" placeholder="e.g. BTB Elite 2027" />
+              </div>
+            </div>
+
+            <!-- Content Type -->
+            <div>
+              <label class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2 block">Content Type</label>
+              <div class="flex flex-wrap gap-2">
+                <button class="filter-pill active" data-ctype="Game Film">Game Film</button>
+                <button class="filter-pill" data-ctype="Drill">Drill</button>
+                <button class="filter-pill" data-ctype="Instructional">Instructional</button>
+                <button class="filter-pill" data-ctype="Highlight">Highlight</button>
+              </div>
+            </div>
+
+            <!-- Notes -->
+            <div>
+              <label class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2 block">Coaching Notes (optional)</label>
+              <textarea id="notesInput" class="btb-input" rows="3" placeholder="Focus on the two-man game sets, look for slide recovery opportunities..."></textarea>
+            </div>
+
+            <!-- Analyze button -->
+            <button id="analyzeBtn" class="btn-red w-full py-4 rounded-xl text-sm uppercase tracking-widest" onclick="analyzeVideo()">
+              Analyse &amp; Catalogue
+            </button>
+          </div>
+        </div>
+
+        <!-- Status Panel -->
+        <div id="statusPanel" class="mt-6 status-bar hidden">
+          <div class="flex items-center gap-3 mb-4">
+            <div id="statusIcon" class="w-8 h-8 rounded-full bg-btbred/20 flex items-center justify-center">
+              <div class="w-4 h-4 border-2 border-btbred border-t-transparent rounded-full pulse-red" style="animation: spin 1s linear infinite;"></div>
+            </div>
+            <div>
+              <p class="font-semibold text-white text-sm" id="statusTitle">Sending to Gemini...</p>
+              <p class="text-gray-500 text-xs" id="statusSub">Analysing video content</p>
+            </div>
+          </div>
+          <div class="progress-bar mb-3">
+            <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+          </div>
+          <div id="statusLog" class="space-y-1 max-h-48 overflow-y-auto">
+            <!-- Log lines appear here -->
+          </div>
+        </div>
+
+        <!-- Results Preview -->
+        <div id="addResults" class="mt-6 hidden">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-bebas text-2xl tracking-wider text-white" id="addResultsTitle">Moments Tagged</h3>
+            <span class="text-btbred font-bold text-sm" id="addResultsCount"></span>
+          </div>
+          <div class="grid grid-cols-1 gap-3" id="addResultsGrid"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== CATALOGUE TAB ===== -->
+    <section id="tab-catalogue" class="tab-content hidden">
+      <div class="flex items-center justify-between mb-8">
+        <div>
+          <h2 class="font-bebas text-5xl tracking-widest text-white mb-1">FILM CATALOGUE</h2>
+          <p class="text-gray-500 text-sm">All catalogued games and videos</p>
+        </div>
+        <button class="btn-red px-5 py-3 rounded-xl text-xs uppercase tracking-wider" onclick="switchTab('add')">+ Add Video</button>
+      </div>
+
+      <div id="catalogueGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div class="col-span-full" id="catalogueEmpty">
+          <div class="empty-state">
+            <div class="text-6xl mb-4">📹</div>
+            <p class="text-gray-400 text-lg font-semibold mb-2">No videos catalogued yet</p>
+            <p class="text-gray-600 text-sm mb-6">Add your first YouTube video to get started</p>
+            <button class="btn-red px-6 py-3 rounded-xl text-xs uppercase tracking-wider" onclick="switchTab('add')">+ Catalogue First Video</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Game moments modal overlay -->
+      <div id="gameMomentsModal" class="fixed inset-0 bg-black/90 z-50 overflow-y-auto hidden">
+        <div class="max-w-5xl mx-auto px-4 py-12">
+          <div class="flex items-center gap-4 mb-8">
+            <button onclick="closeGameModal()" class="w-10 h-10 rounded-full bg-btbcard border border-btbborder flex items-center justify-center hover:border-btbred transition-colors">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            </button>
+            <div>
+              <h3 class="font-bebas text-3xl tracking-wider text-white" id="modalGameTitle">Game Title</h3>
+              <p class="text-gray-500 text-sm" id="modalGameMeta"></p>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5" id="modalMomentsGrid"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== DRILL BOOK TAB ===== -->
+    <section id="tab-drillbook" class="tab-content hidden">
+      <div class="mb-8">
+        <h2 class="font-bebas text-5xl tracking-widest text-white mb-1">DRILL BOOK</h2>
+        <p class="text-gray-500 text-sm">All drill and skill reps grouped by category</p>
+      </div>
+
+      <div id="drillbookContent">
+        <div class="empty-state">
+          <div class="text-6xl mb-4">🏃</div>
+          <p class="text-gray-400 text-lg font-semibold mb-2">No drills catalogued yet</p>
+          <p class="text-gray-600 text-sm">Add instructional or drill videos to populate this section</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== ACADEMY TAB ===== -->
+    <section id="tab-academy" class="tab-content hidden">
+      <div class="mb-8">
+        <h2 class="font-bebas text-5xl tracking-widest text-white mb-1">BTB ACADEMY</h2>
+        <p class="text-gray-500 text-sm">Instructional breakdowns and coaching content</p>
+      </div>
+
+      <div id="academyContent" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div class="col-span-full">
+          <div class="empty-state">
+            <div class="text-6xl mb-4">🎓</div>
+            <p class="text-gray-400 text-lg font-semibold mb-2">Academy coming soon</p>
+            <p class="text-gray-600 text-sm">Add Instructional content type videos to populate the Academy</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="border-t border-btbborder mt-20 py-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-2">
+        <div class="w-6 h-6 bg-btbred rounded-sm flex items-center justify-center">
+          <span class="font-bebas text-white text-sm leading-none">B</span>
+        </div>
+        <span class="font-bebas text-white text-lg tracking-widest">BTB LACROSSE IQ</span>
+      </div>
+      <p class="text-gray-600 text-xs">Built for coaches. Powered by Gemini 2.5 Flash + Airtable.</p>
+    </div>
+  </footer>
+
+  <!-- TOAST -->
+  <div id="toast" class="toast">
+    <p class="font-semibold text-sm" id="toastMsg"></p>
+  </div>
+
+  <style>
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  </style>
+
+  <script>
+    // =============================
+    // STATE
+    // =============================
+    let currentTab = 'search';
+    let searchFilters = { category: '', difficulty: '', content_type: '' };
+    let searchDebounce = null;
+    let currentView = 'grid';
+    let selectedContentType = 'Game Film';
+
+    const CATEGORY_TAG_CLASSES = {
+      'Dodging': 'tag-dodging',
+      'Finishing': 'tag-finishing',
+      'Feeding': 'tag-feeding',
+      'Defense': 'tag-defense',
+      'Faceoff': 'tag-faceoff',
+      'Transition': 'tag-transition',
+      'Clear/Ride': 'tag-clear',
+      'Special Teams': 'tag-special',
+      'X Behind': 'tag-xbehind',
+      'Off-Ball': 'tag-offball',
+      'Communication': 'tag-communication',
+    };
+
+    const DIFF_CLASSES = {
+      'Beginner': 'diff-beginner',
+      'Intermediate': 'diff-intermediate',
+      'Advanced': 'diff-advanced',
+      'Elite': 'diff-elite',
+    };
+
+    // =============================
+    // TABS
+    // =============================
+    function switchTab(tab) {
+      currentTab = tab;
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.getElementById('tab-' + tab)?.classList.remove('hidden');
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.nav-link').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        if (btn.getAttribute('onclick') && btn.getAttribute('onclick').includes("'" + tab + "'")) btn.classList.add('active');
+      });
+
+      if (tab === 'catalogue') loadCatalogue();
+      if (tab === 'drillbook') loadDrillBook();
+      if (tab === 'academy') loadAcademy();
+    }
+
+    function toggleMobileMenu() {
+      document.getElementById('mobileMenu').classList.toggle('hidden');
+    }
+
+    // =============================
+    // SEARCH
+    // =============================
+    document.getElementById('searchInput').addEventListener('input', function() {
+      clearTimeout(searchDebounce);
+      const q = this.value.trim();
+      if (!q) {
+        document.getElementById('searchResults').innerHTML = `
+          <div class="col-span-full empty-state" id="searchEmpty">
+            <div class="text-6xl mb-4">🥍</div>
+            <p class="text-gray-400 text-lg font-semibold mb-2">Ready to search</p>
+            <p class="text-gray-600 text-sm">Type a concept above — dodge, feed, finish, set play...</p>
+          </div>`;
+        document.getElementById('resultsHeader').style.display = 'none';
+        return;
+      }
+      document.getElementById('searchSpinner').style.display = 'block';
+      searchDebounce = setTimeout(() => performSearch(q), 300);
+    });
+
+    // Filter pills
+    document.querySelectorAll('[data-filter]').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const filterType = this.dataset.filter;
+        document.querySelectorAll(`[data-filter="${filterType}"]`).forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        searchFilters[filterType] = this.dataset.value;
+        const q = document.getElementById('searchInput').value.trim();
+        if (q) performSearch(q);
+      });
+    });
+
+    async function performSearch(q) {
+      document.getElementById('searchSpinner').style.display = 'block';
+      try {
+        let url = `/api/search-moments?q=${encodeURIComponent(q)}`;
+        if (searchFilters.category) url += `&category=${encodeURIComponent(searchFilters.category)}`;
+        if (searchFilters.difficulty) url += `&difficulty=${encodeURIComponent(searchFilters.difficulty)}`;
+
+        const res = await fetch(url);
+        const data = await res.json();
+        renderSearchResults(data.moments || []);
+      } catch(err) {
+        renderSearchResults([]);
+        showToast('Search failed — check your connection', 'error');
+      } finally {
+        document.getElementById('searchSpinner').style.display = 'none';
+      }
+    }
+
+    function renderSearchResults(moments) {
+      const grid = document.getElementById('searchResults');
+      const header = document.getElementById('resultsHeader');
+      const countEl = document.getElementById('resultsCount');
+
+      if (!moments.length) {
+        grid.innerHTML = `
+          <div class="col-span-full empty-state">
+            <div class="text-5xl mb-4">🔍</div>
+            <p class="text-gray-400 text-lg font-semibold mb-2">No moments found</p>
+            <p class="text-gray-600 text-sm">Try different keywords — split dodge, backpipe, step-down...</p>
+          </div>`;
+        header.style.display = 'none';
+        return;
+      }
+
+      header.style.display = 'flex';
+      countEl.textContent = `${moments.length} moment${moments.length !== 1 ? 's' : ''} found`;
+
+      const cls = currentView === 'grid'
+        ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5'
+        : 'grid grid-cols-1 gap-3';
+      grid.className = cls;
+      grid.innerHTML = moments.map(m => renderMomentCard(m)).join('');
+    }
+
+    // =============================
+    // MOMENT CARD
+    // =============================
+    function renderMomentCard(m) {
+      const videoId = m.VideoID || m.video_id || extractVideoId(m.YouTubeURL || m.youtube_url || '');
+      const thumb = videoId ? `https://img.youtube.com/vi/${videoId}/mqdefault.jpg` : '';
+      const deepLink = m.DeepLink || m.youtube_deep_link || '';
+      const chain = m.ConceptChain || m.concept_chain || '';
+      const tags = parseTags(m.ConceptTags || m.concept_tags || []);
+      const teaching = m.TeachingPoint || m.teaching_point || '';
+      const coaching = m.CoachingCue || m.coaching_cue || '';
+      const category = m.SkillCategory || m.skill_category || '';
+      const timestamp = m.TimestampLabel || m.timestamp_label || '';
+      const difficulty = m.Difficulty || m.difficulty || '';
+      const tagClass = CATEGORY_TAG_CLASSES[category] || 'tag-default';
+      const diffClass = DIFF_CLASSES[difficulty] || '';
+
+      const chainParts = chain.split(' > ');
+      const chainHtml = chainParts.map((p, i) =>
+        i < chainParts.length - 1
+          ? `${escHtml(p)} <span class="text-btbred opacity-60">›</span> `
+          : `<strong>${escHtml(p)}</strong>`
+      ).join('');
+
+      return `
+      <div class="moment-card" onclick="openDeepLink('${escAttr(deepLink)}')">
+        ${thumb ? `
+        <div class="relative" style="aspect-ratio:16/9; background:#0d0d0d;">
+          <img src="${thumb}" alt="" loading="lazy" class="w-full h-full object-cover" />
+          <div class="play-overlay">
+            <div class="w-14 h-14 bg-btbred rounded-full flex items-center justify-center shadow-lg">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg>
+            </div>
+          </div>
+          <div class="absolute top-2 left-2 bg-black/80 text-white text-xs font-bold px-2 py-1 rounded" style="font-family:monospace;">${escHtml(timestamp)}</div>
+          ${difficulty ? `<div class="absolute top-2 right-2 text-xs font-bold px-2 py-1 rounded ${diffClass}">${escHtml(difficulty)}</div>` : ''}
+        </div>` : ''}
+        <div class="p-4">
+          <div class="concept-chain mb-2">${chainHtml}</div>
+          ${teaching ? `<p class="text-white text-sm font-semibold mb-3 leading-snug">${escHtml(teaching)}</p>` : ''}
+          ${coaching ? `<p class="text-gray-500 text-xs mb-3 italic">"${escHtml(coaching)}"</p>` : ''}
+          <div class="flex flex-wrap gap-1 mb-3">
+            ${category ? `<span class="text-xs font-bold px-2 py-0.5 rounded-full ${tagClass}">${escHtml(category)}</span>` : ''}
+            ${tags.slice(0, 4).map(t => `<span class="text-xs px-2 py-0.5 rounded-full ${tagClass} opacity-70">${escHtml(t)}</span>`).join('')}
+          </div>
+          <button class="w-full btn-red py-2 rounded-lg text-xs uppercase tracking-wider flex items-center justify-center gap-2"
+            onclick="event.stopPropagation(); openDeepLink('${escAttr(deepLink)}')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg>
+            Watch at ${escHtml(timestamp)}
+          </button>
+        </div>
+      </div>`;
+    }
+
+    // =============================
+    // ADD VIDEO / ANALYZE
+    // =============================
+    document.querySelectorAll('[data-ctype]').forEach(btn => {
+      btn.addEventListener('click', function() {
+        document.querySelectorAll('[data-ctype]').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        selectedContentType = this.dataset.ctype;
+      });
+    });
+
+    async function analyzeVideo() {
+      const url = document.getElementById('ytUrl').value.trim();
+      const title = document.getElementById('gameTitle').value.trim();
+      const level = document.getElementById('levelSelect').value;
+      const team = document.getElementById('teamInput').value.trim();
+      const notes = document.getElementById('notesInput').value.trim();
+
+      if (!url) { showToast('Please enter a YouTube URL', 'error'); return; }
+      if (!title) { showToast('Please enter a game/video title', 'error'); return; }
+      if (!isValidYouTubeUrl(url)) { showToast('Please enter a valid YouTube URL', 'error'); return; }
+
+      const btn = document.getElementById('analyzeBtn');
+      btn.disabled = true;
+      btn.textContent = 'Analysing...';
+
+      const statusPanel = document.getElementById('statusPanel');
+      statusPanel.classList.remove('hidden');
+      document.getElementById('addResults').classList.add('hidden');
+
+      setStatus('Sending to Gemini 2.5 Flash...', 'Analysing video content', 5);
+      addLog('📡 Connecting to Gemini API...');
+
+      try {
+        addLog('🎬 Sending YouTube URL for analysis...');
+        setStatus('Gemini is watching the video...', 'This may take 30-90 seconds for long videos', 20);
+
+        const analyzeRes = await fetch('/api/analyze-video', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ youtube_url: url, game_title: title, level, team, notes })
+        });
+
+        if (!analyzeRes.ok) {
+          const err = await analyzeRes.json().catch(() => ({}));
+          throw new Error(err.error || `API error ${analyzeRes.status}`);
+        }
+
+        const analyzeData = await analyzeRes.json();
+        const moments = analyzeData.moments || [];
+
+        addLog(`✅ Gemini identified ${moments.length} moments`);
+        setStatus(`Found ${moments.length} moments — saving to library...`, 'Writing to Airtable', 60);
+
+        if (moments.length === 0) {
+          throw new Error('Gemini returned 0 moments — the video may be private or unavailable');
+        }
+
+        addLog('💾 Saving to Airtable...');
+        const saveRes = await fetch('/api/save-moments', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            moments,
+            game_title: title,
+            youtube_url: url,
+            video_id: analyzeData.video_id,
+            level,
+            team
+          })
+        });
+
+        if (!saveRes.ok) {
+          const err = await saveRes.json().catch(() => ({}));
+          throw new Error(err.error || `Save error ${saveRes.status}`);
+        }
+
+        const saveData = await saveRes.json();
+        addLog(`✅ Saved ${saveData.saved} records to Airtable`);
+        setStatus(`Done! ${saveData.saved} moments catalogued`, title, 100);
+
+        // Show status as success
+        document.getElementById('statusIcon').innerHTML = `
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>`;
+        document.getElementById('statusIcon').className = 'w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center';
+
+        // Preview results
+        showAddResults(moments, title);
+        showToast(`${saveData.saved} moments catalogued from "${title}"`, 'success');
+
+      } catch(err) {
+        console.error(err);
+        addLog(`❌ Error: ${err.message}`);
+        setStatus('Analysis failed', err.message, 0);
+        document.getElementById('statusIcon').innerHTML = `
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D22630" stroke-width="2.5">
+            <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+          </svg>`;
+        document.getElementById('statusIcon').className = 'w-8 h-8 rounded-full bg-red-500/20 flex items-center justify-center';
+        showToast(err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Analyse & Catalogue';
+      }
+    }
+
+    function setStatus(title, sub, progress) {
+      document.getElementById('statusTitle').textContent = title;
+      document.getElementById('statusSub').textContent = sub;
+      document.getElementById('progressFill').style.width = progress + '%';
+    }
+
+    function addLog(line) {
+      const log = document.getElementById('statusLog');
+      const el = document.createElement('p');
+      el.className = 'text-xs text-gray-500 font-mono';
+      el.textContent = line;
+      log.appendChild(el);
+      log.scrollTop = log.scrollHeight;
+    }
+
+    function showAddResults(moments, title) {
+      const container = document.getElementById('addResults');
+      container.classList.remove('hidden');
+      document.getElementById('addResultsTitle').textContent = `${title} — Moments Tagged`;
+      document.getElementById('addResultsCount').textContent = `${moments.length} moments`;
+      const grid = document.getElementById('addResultsGrid');
+      // Show first 6 as a preview
+      grid.innerHTML = moments.slice(0, 6).map(m => renderMomentCard(m)).join('');
+      if (moments.length > 6) {
+        grid.innerHTML += `<div class="col-span-full text-center py-4">
+          <button class="btn-red px-6 py-3 rounded-xl text-xs uppercase tracking-wider" onclick="switchTab('catalogue')">
+            View All ${moments.length} Moments in Catalogue →
+          </button>
+        </div>`;
+      }
+    }
+
+    // =============================
+    // CATALOGUE
+    // =============================
+    async function loadCatalogue() {
+      const grid = document.getElementById('catalogueGrid');
+      grid.innerHTML = renderSkeletons(6);
+
+      try {
+        const res = await fetch('/api/list-games');
+        const data = await res.json();
+        const games = data.games || [];
+
+        if (!games.length) {
+          grid.innerHTML = document.getElementById('catalogueEmpty').outerHTML;
+          return;
+        }
+
+        grid.innerHTML = games.map(g => renderGameCard(g)).join('');
+      } catch(err) {
+        grid.innerHTML = `<div class="col-span-full empty-state"><p class="text-gray-400">Failed to load catalogue</p></div>`;
+      }
+    }
+
+    function renderGameCard(g) {
+      const videoId = g.VideoID || g.video_id || '';
+      const thumb = videoId ? `https://img.youtube.com/vi/${videoId}/mqdefault.jpg` : '';
+      const title = g.GameTitle || g.game_title || 'Untitled';
+      const count = g.moment_count || g.count || 0;
+      const team = g.Team || g.team || '';
+      const level = g.Level || g.level || '';
+
+      return `
+      <div class="game-card" onclick="openGameMoments('${escAttr(title)}', '${escAttr(videoId)}')">
+        ${thumb ? `
+        <div style="aspect-ratio:16/9; background:#0d0d0d; overflow:hidden;">
+          <img src="${thumb}" alt="" loading="lazy" class="w-full h-full object-cover opacity-80 hover:opacity-100 transition-opacity" />
+        </div>` : `<div style="aspect-ratio:16/9; background:#111; display:flex; align-items:center; justify-content:center;"><span class="text-4xl">📹</span></div>`}
+        <div class="p-4">
+          <h3 class="font-bold text-white text-sm mb-1 leading-snug">${escHtml(title)}</h3>
+          <div class="flex items-center gap-3 text-xs text-gray-500">
+            ${team ? `<span>${escHtml(team)}</span>` : ''}
+            ${level ? `<span class="text-btbred font-bold">${escHtml(level)}</span>` : ''}
+            <span class="ml-auto text-gray-400 font-semibold">${count} moments</span>
+          </div>
+        </div>
+      </div>`;
+    }
+
+    async function openGameMoments(gameTitle, videoId) {
+      const modal = document.getElementById('gameMomentsModal');
+      modal.classList.remove('hidden');
+      document.getElementById('modalGameTitle').textContent = gameTitle;
+      document.getElementById('modalGameMeta').textContent = 'Loading moments...';
+      document.getElementById('modalMomentsGrid').innerHTML = renderSkeletons(6);
+
+      try {
+        const res = await fetch(`/api/search-moments?q=${encodeURIComponent(gameTitle)}&game=${encodeURIComponent(gameTitle)}`);
+        const data = await res.json();
+        const moments = data.moments || [];
+        document.getElementById('modalGameMeta').textContent = `${moments.length} tagged moments`;
+        document.getElementById('modalMomentsGrid').innerHTML = moments.map(m => renderMomentCard(m)).join('');
+      } catch(err) {
+        document.getElementById('modalMomentsGrid').innerHTML = `<div class="col-span-full empty-state"><p>Failed to load moments</p></div>`;
+      }
+    }
+
+    function closeGameModal() {
+      document.getElementById('gameMomentsModal').classList.add('hidden');
+    }
+
+    // =============================
+    // DRILL BOOK
+    // =============================
+    async function loadDrillBook() {
+      const container = document.getElementById('drillbookContent');
+      container.innerHTML = '<div class="flex justify-center py-20"><div class="w-8 h-8 border-2 border-btbred border-t-transparent rounded-full" style="animation: spin 1s linear infinite;"></div></div>';
+
+      try {
+        const res = await fetch('/api/search-moments?content_type=Drill&q=drill');
+        const data = await res.json();
+        const moments = (data.moments || []).filter(m => {
+          const ct = m.ContentType || m.content_type || '';
+          return ct === 'Drill' || ct === 'Instructional';
+        });
+
+        if (!moments.length) {
+          container.innerHTML = `<div class="empty-state"><div class="text-6xl mb-4">🏃</div><p class="text-gray-400 text-lg font-semibold mb-2">No drills catalogued yet</p><p class="text-gray-600 text-sm">Add instructional or drill videos to populate this section</p></div>`;
+          return;
+        }
+
+        // Group by skill category
+        const byCategory = {};
+        moments.forEach(m => {
+          const cat = m.SkillCategory || m.skill_category || 'Other';
+          if (!byCategory[cat]) byCategory[cat] = [];
+          byCategory[cat].push(m);
+        });
+
+        const categories = ['Dodging','Finishing','Feeding','Defense','Faceoff','Transition','Clear/Ride','Special Teams','X Behind','Off-Ball','Communication'];
+        let html = '';
+
+        categories.forEach(cat => {
+          const catMoments = byCategory[cat] || [];
+          if (!catMoments.length) return;
+          const tagClass = CATEGORY_TAG_CLASSES[cat] || 'tag-default';
+          html += `
+          <div class="category-section">
+            <div class="category-header" onclick="toggleCategory(this)">
+              <div class="flex items-center gap-3">
+                <span class="text-xs font-bold px-3 py-1 rounded-full ${tagClass}">${escHtml(cat)}</span>
+                <span class="font-semibold text-white text-sm">${catMoments.length} rep${catMoments.length !== 1 ? 's' : ''}</span>
+              </div>
+              <svg class="chevron w-4 h-4 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </div>
+            <div class="category-body p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              ${catMoments.map(m => renderMomentCard(m)).join('')}
+            </div>
+          </div>`;
+        });
+
+        // Catch uncategorized
+        const uncategorized = byCategory['Other'] || [];
+        if (uncategorized.length) {
+          html += `<div class="category-section">
+            <div class="category-header" onclick="toggleCategory(this)">
+              <div class="flex items-center gap-3">
+                <span class="text-xs font-bold px-3 py-1 rounded-full tag-default">Other</span>
+                <span class="font-semibold text-white text-sm">${uncategorized.length} reps</span>
+              </div>
+              <svg class="chevron w-4 h-4 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div class="category-body p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              ${uncategorized.map(m => renderMomentCard(m)).join('')}
+            </div>
+          </div>`;
+        }
+
+        container.innerHTML = html;
+      } catch(err) {
+        container.innerHTML = `<div class="empty-state"><p class="text-gray-400">Failed to load drill book</p></div>`;
+      }
+    }
+
+    function toggleCategory(header) {
+      const body = header.nextElementSibling;
+      const chevron = header.querySelector('.chevron');
+      body.classList.toggle('hidden');
+      chevron.classList.toggle('open');
+    }
+
+    // =============================
+    // ACADEMY
+    // =============================
+    async function loadAcademy() {
+      const container = document.getElementById('academyContent');
+      container.innerHTML = '<div class="col-span-full flex justify-center py-20"><div class="w-8 h-8 border-2 border-btbred border-t-transparent rounded-full" style="animation: spin 1s linear infinite;"></div></div>';
+
+      try {
+        const res = await fetch('/api/search-moments?content_type=Instructional&q=instructional');
+        const data = await res.json();
+        const moments = (data.moments || []).filter(m => {
+          const ct = m.ContentType || m.content_type || '';
+          return ct === 'Instructional';
+        });
+
+        if (!moments.length) {
+          container.innerHTML = `<div class="col-span-full"><div class="empty-state"><div class="text-6xl mb-4">🎓</div><p class="text-gray-400 text-lg font-semibold mb-2">No instructional content yet</p><p class="text-gray-600 text-sm">Add videos with type "Instructional" to populate the Academy</p></div></div>`;
+          return;
+        }
+
+        container.innerHTML = moments.map(m => renderMomentCard(m)).join('');
+      } catch(err) {
+        container.innerHTML = `<div class="col-span-full empty-state"><p class="text-gray-400">Failed to load Academy</p></div>`;
+      }
+    }
+
+    // =============================
+    // HELPERS
+    // =============================
+    function setView(view) {
+      currentView = view;
+      document.querySelectorAll('[data-view]').forEach(b => b.classList.remove('active'));
+      document.querySelector(`[data-view="${view}"]`)?.classList.add('active');
+      const q = document.getElementById('searchInput').value.trim();
+      if (q) performSearch(q);
+    }
+
+    function openDeepLink(url) {
+      if (url) window.open(url, '_blank', 'noopener');
+    }
+
+    function isValidYouTubeUrl(url) {
+      return /youtube\.com\/watch|youtu\.be\//.test(url);
+    }
+
+    function extractVideoId(url) {
+      const m = url.match(/(?:v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+      return m ? m[1] : '';
+    }
+
+    function parseTags(tags) {
+      if (Array.isArray(tags)) return tags;
+      if (typeof tags === 'string') return tags.split(/[,\n]/).map(t => t.trim()).filter(Boolean);
+      return [];
+    }
+
+    function escHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function escAttr(str) {
+      if (!str) return '';
+      return String(str).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    }
+
+    function renderSkeletons(n) {
+      return Array(n).fill(0).map(() => `
+        <div class="moment-card">
+          <div class="skeleton" style="aspect-ratio:16/9;"></div>
+          <div class="p-4 space-y-3">
+            <div class="skeleton h-3 w-3/4 rounded"></div>
+            <div class="skeleton h-4 w-full rounded"></div>
+            <div class="skeleton h-4 w-5/6 rounded"></div>
+            <div class="flex gap-2">
+              <div class="skeleton h-5 w-16 rounded-full"></div>
+              <div class="skeleton h-5 w-20 rounded-full"></div>
+            </div>
+          </div>
+        </div>`).join('');
+    }
+
+    function showToast(msg, type = '') {
+      const toast = document.getElementById('toast');
+      document.getElementById('toastMsg').textContent = msg;
+      toast.className = `toast ${type}`;
+      setTimeout(() => toast.classList.add('show'), 10);
+      setTimeout(() => toast.classList.remove('show'), 4000);
+    }
+
+    // Close modal on backdrop click
+    document.getElementById('gameMomentsModal').addEventListener('click', function(e) {
+      if (e.target === this) closeGameModal();
+    });
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') closeGameModal();
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        switchTab('search');
+        document.getElementById('searchInput').focus();
+      }
+    });
+
+    // Init
+    switchTab('search');
+  </script>
+</body>
+</html>

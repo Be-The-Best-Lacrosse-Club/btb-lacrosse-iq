@@ -1,0 +1,44 @@
+[build]
+  publish = "."
+  command = "echo 'No build step required'"
+
+[functions]
+  directory = "netlify/functions"
+
+[edge_functions]
+  directory = "netlify/edge-functions"
+
+[[edge_functions]]
+  function = "analyze-video"
+  path = "/api/analyze-video"
+
+[[edge_functions]]
+  function = "save-moments"
+  path = "/api/save-moments"
+
+[[edge_functions]]
+  function = "search-moments"
+  path = "/api/search-moments"
+
+[[edge_functions]]
+  function = "list-games"
+  path = "/api/list-games"
+
+[[headers]]
+  for = "/api/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
+    Access-Control-Allow-Methods = "GET, POST, OPTIONS"
+    Access-Control-Allow-Headers = "Content-Type, Authorization"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+[dev]
+  command = "npx serve ."
+  port = 8888
+  targetPort = 3000
