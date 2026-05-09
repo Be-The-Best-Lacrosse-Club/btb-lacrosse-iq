@@ -5,9 +5,6 @@
 [functions]
   directory = "netlify/functions"
 
-[edge_functions]
-  directory = "netlify/edge-functions"
-
 [[edge_functions]]
   function = "analyze-video"
   path = "/api/analyze-video"
@@ -34,7 +31,7 @@
 [[headers]]
   for = "/*"
   [headers.values]
-    X-Frame-Options = "DENY"
+    Content-Security-Policy = "frame-ancestors 'self' https://*.bethebestli.com https://btb-os.netlify.app http://localhost:*"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
 
