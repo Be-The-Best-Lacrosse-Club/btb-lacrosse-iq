@@ -404,6 +404,7 @@ function normalizeEvent(e, videoId, idx) {
         <span class="font-bebas text-white text-2xl tracking-widest">BTB LACROSSE IQ</span>
       </div>
       <div class="hidden md:flex items-center gap-1">
+        <input type="password" id="apiKey" placeholder="Gemini API Key" class="bg-[#111] border border-[#222] rounded px-3 py-1.5 text-xs text-white focus:outline-none focus:border-[#D22630] w-48 mr-4" onchange="localStorage.setItem('btb_gemini_key', this.value)">
         <button class="nav-link tab-btn active" onclick="switchTab('search')">Search</button>
         <button class="nav-link tab-btn" onclick="switchTab('catalogue')">Catalogue</button>
         <button class="nav-link tab-btn" onclick="switchTab('drillbook')">Drill Book</button>
