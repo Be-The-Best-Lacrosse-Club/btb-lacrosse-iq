@@ -331,7 +331,67 @@
       .search-input { font-size: 14px; padding: 14px 20px; }
     }
   </style>
-</head>
+    <script>
+      const VISUAL_PROMPT = [
+  'You are an expert lacrosse film analyst for BTB Lacrosse Club on Long Island, NY.',
+  'Watch the lacrosse game video and identify every notable play.',
+  '',
+  'For EACH play, return a JSON object with these EXACT fields:',
+  '  event_sequence: (number, starting at 1)',
+  '  source_start_seconds: (number — timestamp when the play starts)',
+  '  source_end_seconds: (number — timestamp when the play ends)',
+  '  timestamp: (string — formatted as M:SS)',
+  '  play: (string — short label, e.g. "Split dodge to paint" or "Adjacent slide win")',
+  '  play_result: (one of: goal, save, turnover, ground_ball, clear_success, clear_fail, faceoff_win, faceoff_loss, shot_on_goal, shot_off_target, caused_turnover, penalty)',
+  '  team_focus: (one of: offense, defense)',
+  '  phase: (one of: "Offense - Settled 6v6", "Offense - Early Offense / Transition", "Offense - EMO", "Defense - Settled 6v6", "Defense - Recovery", "Defense - Man Down", "Faceoff", "Clear", "Ride")',
+  '  category: (one of: "Advantage Created", "Finish", "Shot Quality Win", "Decision Error", "Defensive Stop", "On Ball Win", "Slide Recover Win", "GB Win", "Faceoff Win", "Clear Success", "Ride Stop", "Special Teams Win")',
+  '  tags: (array from: dodge-downhill, paint-touch, draw-two, one-more, inside-feed, two-man-game, step-down, on-the-run, crease-finish, shot-selection-good, shot-selection-poor, approach-angle-win, top-side-denial, hot-slide, second-slide, recover-out, communication-win, matchup-discipline, gb-toughness, clamp-win, wing-support, goalie-outlet, one-more-clear, reverse-field, carry-over-midline, ride-pressure, sideline-trap, deny-reverse, decision-making-plus, decision-making-minus, poise-plus, compete-plus, iq-off-ball, coachable-error)',
+  '  main_teaching_point: (one sentence — key coaching takeaway from this play)',
+  '  event_summary: (one sentence — what happened)',
+  '  players: (array of visible jersey numbers, e.g. ["#7", "#22"])',
+  '  period: (string — "1", "2", "3", "4", or "OT" if visible on scoreboard)',
+  '  clock: (string — game clock if visible, e.g. "8:32", or "")',
+  '  score_state: (string — score if visible on scoreboard, e.g. "3-2", or "")',
+  '  ai_confidence: (number 0-1 — confidence in this play identification)',
+  '',
+  'Return ONLY a JSON array.'
+].join('\n');
+
+function normalizeEvent(e, videoId, idx) {
+  const ts = Number(e.source_start_seconds ?? e.timestamp_seconds ?? 0);
+  const m = Math.floor(ts / 60);
+  const sec = Math.floor(ts % 60);
+  const label = e.timestamp_label ?? e.timestamp ?? `${m}:${sec < 10 ? '0' : ''}${sec}`;
+  const conceptChain = e.concept_chain ?? e.play ?? e.event_summary ?? '';
+  const conceptPrimary = e.concept_primary ?? conceptChain.split('>')[0]?.trim() ?? '';
+  
+  let skill_category = 'Off-Ball';
+  const phase = e.phase || '';
+  if (phase.includes('Offense')) skill_category = 'Feeding';
+  if (phase.includes('Defense')) skill_category = 'Defense';
+  if (phase.includes('Faceoff')) skill_category = 'Faceoff';
+  if (phase.includes('Clear') || phase.includes('Ride')) skill_category = 'Clear/Ride';
+
+  return {
+    timestamp_seconds: ts,
+    timestamp_label: label,
+    youtube_deep_link: `https://www.youtube.com/watch?v=${videoId}&t=${Math.floor(ts)}s`,
+    concept_primary: conceptPrimary,
+    concept_chain: conceptChain,
+    concept_tags: Array.isArray(e.concept_tags) ? e.concept_tags : (e.tags ?? []),
+    skill_category: e.skill_category ?? skill_category,
+    content_type: e.content_type ?? 'Game Film',
+    difficulty: e.difficulty ?? 'Intermediate',
+    teaching_point: e.teaching_point ?? e.main_teaching_point ?? '',
+    coaching_cue: e.coaching_cue ?? e.main_teaching_point ?? '',
+    players_involved: Array.isArray(e.players_involved) ? e.players_involved : (e.players ?? []),
+    result: e.result ?? e.play_result ?? '',
+    video_quality: Number(e.video_quality ?? e.ai_confidence ?? 0.8),
+  };
+}
+    </script>
+  </head>
 <body class="bg-btbdark">
 
   <!-- NAV -->
@@ -360,7 +420,8 @@
     <!-- Mobile dropdown -->
     <div id="mobileMenu" class="hidden md:hidden bg-btbgray border-t border-btbborder">
       <div class="px-4 py-3 flex flex-col gap-1">
-        <button class="tab-btn text-left active" onclick="switchTab('search'); toggleMobileMenu()">Search</button>
+        <button class="tab-btn text-left active" onclick="document.getElementById('apiKey').value = localStorage.getItem('btb_gemini_key') || '';
+    switchTab('search'); toggleMobileMenu()">Search</button>
         <button class="tab-btn text-left" onclick="switchTab('catalogue'); toggleMobileMenu()">Catalogue</button>
         <button class="tab-btn text-left" onclick="switchTab('drillbook'); toggleMobileMenu()">Drill Book</button>
         <button class="tab-btn text-left" onclick="switchTab('academy'); toggleMobileMenu()">Academy</button>
@@ -893,19 +954,66 @@
         addLog('🎬 Sending YouTube URL for analysis...');
         setStatus('Gemini is watching the video...', 'This may take 30-90 seconds for long videos', 20);
 
-        const analyzeRes = await fetch('/api/analyze-video', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ youtube_url: url, game_title: title, level, team, notes })
-        });
-
-        if (!analyzeRes.ok) {
-          const err = await analyzeRes.json().catch(() => ({}));
-          throw new Error(err.error || `API error ${analyzeRes.status}`);
+        
+        const geminiKey = document.getElementById('apiKey').value.trim() || 'API_KEY_PLACEHOLDER';
+        if (!geminiKey || geminiKey === 'API_KEY_PLACEHOLDER') {
+          throw new Error('Please enter a Gemini API Key in the Settings tab (top right) to run analysis directly in the browser.');
         }
 
-        const analyzeData = await analyzeRes.json();
-        const moments = analyzeData.moments || [];
+        const videoId = extractVideoId(url);
+        const videoUrl = url.startsWith('http') ? url : `https://www.youtube.com/watch?v=${videoId}`;
+        
+        const context = [
+          title ? `Game: ${title}` : '',
+          level ? `Level: ${level}` : '',
+          team ? `Coaching focus team: ${team}` : '',
+          notes ? `Coach Notes: ${notes}` : ''
+        ].filter(Boolean).join('\n');
+
+        const promptText = `${VISUAL_PROMPT}\n\n${context ? `--- CONTEXT ---\n${context}\n\n` : ''}Analyze this lacrosse game video now.`;
+
+        addLog('🧠 Sending directly to Gemini API...');
+        
+        const geminiResp = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{
+                role: 'user',
+                parts: [
+                  { fileData: { mimeType: 'video/mp4', fileUri: videoUrl } },
+                  { text: promptText },
+                ],
+              }],
+              generationConfig: { responseMimeType: 'application/json', maxOutputTokens: 16384, temperature: 0.1 },
+            }),
+          }
+        );
+
+        if (!geminiResp.ok) {
+          const errText = await geminiResp.text();
+          let parsedErr = errText;
+          try { parsedErr = JSON.parse(errText).error.message; } catch {}
+          throw new Error(`Gemini video analysis failed: ${parsedErr}`);
+        }
+
+        const geminiData = await geminiResp.json();
+        const rawText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+        const cleaned = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
+
+        let rawEvents = [];
+        try {
+          rawEvents = JSON.parse(cleaned);
+          if (!Array.isArray(rawEvents)) rawEvents = rawEvents.events ?? [];
+        } catch (err) {
+          throw new Error('Gemini returned invalid JSON');
+        }
+
+        const moments = rawEvents.map((e, i) => normalizeEvent(e, videoId, i));
+        const analyzeData = { video_id: videoId }; // Used downstream
+
 
         addLog(`✅ Gemini identified ${moments.length} moments`);
         setStatus(`Found ${moments.length} moments — saving to library...`, 'Writing to Airtable', 60);
