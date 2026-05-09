@@ -1009,7 +1009,8 @@ function normalizeEvent(e, videoId, idx) {
           rawEvents = JSON.parse(cleaned);
           if (!Array.isArray(rawEvents)) rawEvents = rawEvents.events ?? [];
         } catch (err) {
-          throw new Error('Gemini returned invalid JSON');
+          console.error("Gemini Raw Text:", rawText);
+          throw new Error('Gemini returned invalid JSON. Check browser console for output.');
         }
 
         const moments = rawEvents.map((e, i) => normalizeEvent(e, videoId, i));
