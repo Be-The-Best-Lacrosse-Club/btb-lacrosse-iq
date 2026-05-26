@@ -1,4 +1,4 @@
-const AIRTABLE_BASE = 'appjseA9aHJR7erlD';
+const AIRTABLE_BASE = 'appvLo6AOYhFmBsQ9';
 const AIRTABLE_TABLE = 'LacrosseIQ';
 const AIRTABLE_API = 'https://api.airtable.com/v0';
 
@@ -32,11 +32,10 @@ export default async function handler(req, context) {
     let offset = undefined;
 
     do {
-      const params = new URLSearchParams({
-        fields: JSON.stringify(['GameTitle', 'YouTubeURL', 'VideoID', 'Level', 'Team', 'ContentType', 'CreatedAt']),
-        sort: JSON.stringify([{ field: 'CreatedAt', direction: 'desc' }]),
-        maxRecords: '1000',
-      });
+      const params = new URLSearchParams({ maxRecords: '1000' });
+      ['GameTitle', 'YouTubeURL', 'VideoID', 'Level', 'Team', 'ContentType', 'CreatedAt'].forEach((f, i) => params.set(`fields[${i}]`, f));
+      params.set('sort[0][field]', 'CreatedAt');
+      params.set('sort[0][direction]', 'desc');
 
       if (offset) params.set('offset', offset);
 

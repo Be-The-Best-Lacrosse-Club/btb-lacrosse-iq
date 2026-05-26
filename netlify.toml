@@ -5,9 +5,8 @@
 [functions]
   directory = "netlify/functions"
 
-[[edge_functions]]
-  function = "analyze-video"
-  path = "/api/analyze-video"
+[functions."analyze-video"]
+  timeout = 60
 
 [[edge_functions]]
   function = "save-moments"

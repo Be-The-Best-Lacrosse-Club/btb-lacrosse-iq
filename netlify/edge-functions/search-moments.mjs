@@ -1,4 +1,4 @@
-const AIRTABLE_BASE = 'appjseA9aHJR7erlD';
+const AIRTABLE_BASE = 'appvLo6AOYhFmBsQ9';
 const AIRTABLE_TABLE = 'LacrosseIQ';
 const AIRTABLE_API = 'https://api.airtable.com/v0';
 
@@ -77,15 +77,18 @@ export default async function handler(req, context) {
 
     const params = new URLSearchParams({
       filterByFormula: formula,
-      sort: JSON.stringify([{ field: 'TimestampSeconds', direction: 'asc' }]),
       maxRecords: '200',
-      fields: JSON.stringify([
-        'GameTitle', 'YouTubeURL', 'VideoID', 'TimestampSeconds', 'TimestampLabel',
-        'DeepLink', 'ConceptPrimary', 'ConceptChain', 'ConceptTags', 'SkillCategory',
-        'ContentType', 'Difficulty', 'TeachingPoint', 'CoachingCue', 'PlayersInvolved',
-        'Result', 'VideoQuality', 'Level', 'Team', 'CreatedAt'
-      ]),
     });
+    // fields must use indexed bracket notation, not JSON.stringify
+    const fieldNames = [
+      'GameTitle', 'YouTubeURL', 'VideoID', 'TimestampSeconds', 'TimestampLabel',
+      'DeepLink', 'ConceptPrimary', 'ConceptChain', 'ConceptTags', 'SkillCategory',
+      'ContentType', 'Difficulty', 'TeachingPoint', 'CoachingCue', 'PlayersInvolved',
+      'Result', 'VideoQuality', 'Level', 'Team', 'CreatedAt'
+    ];
+    fieldNames.forEach((f, i) => params.set(`fields[${i}]`, f));
+    params.set('sort[0][field]', 'TimestampSeconds');
+    params.set('sort[0][direction]', 'asc');
 
     const airtableUrl = `${AIRTABLE_API}/${AIRTABLE_BASE}/${encodeURIComponent(AIRTABLE_TABLE)}?${params.toString()}`;
 
