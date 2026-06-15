@@ -497,13 +497,26 @@ function normalizeEvent(e, videoId, idx) {
         <button class="filter-pill" data-filter="category" data-value="X Behind">X Behind</button>
         <button class="filter-pill" data-filter="category" data-value="Off-Ball">Off-Ball</button>
       </div>
-      <div class="flex flex-wrap gap-2 justify-center mb-8">
+      <div class="flex flex-wrap gap-2 justify-center mb-3">
         <span class="text-gray-600 text-xs font-bold uppercase tracking-wider self-center mr-1">Difficulty:</span>
         <button class="filter-pill active" data-filter="difficulty" data-value="">All</button>
         <button class="filter-pill" data-filter="difficulty" data-value="Beginner">Beginner</button>
         <button class="filter-pill" data-filter="difficulty" data-value="Intermediate">Intermediate</button>
         <button class="filter-pill" data-filter="difficulty" data-value="Advanced">Advanced</button>
         <button class="filter-pill" data-filter="difficulty" data-value="Elite">Elite</button>
+      </div>
+      <div class="flex flex-wrap gap-2 justify-center mb-3">
+        <span class="text-xs text-gray-500 uppercase tracking-wider self-center mr-2">Gender</span>
+        <button class="filter-pill active" data-filter="gender" data-value="">All</button>
+        <button class="filter-pill" data-filter="gender" data-value="Men">Men</button>
+        <button class="filter-pill" data-filter="gender" data-value="Women">Women</button>
+      </div>
+      <div class="flex flex-wrap gap-2 justify-center mb-8">
+        <span class="text-xs text-gray-500 uppercase tracking-wider self-center mr-2">Level</span>
+        <button class="filter-pill active" data-filter="level" data-value="">All</button>
+        <button class="filter-pill" data-filter="level" data-value="College Men">College Men</button>
+        <button class="filter-pill" data-filter="level" data-value="College Women">College Women</button>
+        <button class="filter-pill" data-filter="level" data-value="College">College</button>
       </div>
 
       <!-- Results count -->
@@ -740,7 +753,7 @@ function normalizeEvent(e, videoId, idx) {
     // STATE
     // =============================
     let currentTab = 'search';
-    let searchFilters = { category: '', difficulty: '', content_type: '' };
+    let searchFilters = { category: '', difficulty: '', content_type: '', gender: '', level: '' };
     let searchDebounce = null;
     let currentView = 'grid';
     let selectedContentType = 'Game Film';
@@ -826,6 +839,8 @@ function normalizeEvent(e, videoId, idx) {
         let url = `/api/search-moments?q=${encodeURIComponent(q)}`;
         if (searchFilters.category) url += `&category=${encodeURIComponent(searchFilters.category)}`;
         if (searchFilters.difficulty) url += `&difficulty=${encodeURIComponent(searchFilters.difficulty)}`;
+        if (searchFilters.gender) url += `&gender=${encodeURIComponent(searchFilters.gender)}`;
+        if (searchFilters.level) url += `&level=${encodeURIComponent(searchFilters.level)}`;
 
         const res = await fetch(url);
         const data = await res.json();
@@ -838,7 +853,10 @@ function normalizeEvent(e, videoId, idx) {
       }
     }
 
+    let currentMoments = [];   // for Coach Mode navigation
+
     function renderSearchResults(moments) {
+      currentMoments = moments;
       const grid = document.getElementById('searchResults');
       const header = document.getElementById('resultsHeader');
       const countEl = document.getElementById('resultsCount');
@@ -861,13 +879,14 @@ function normalizeEvent(e, videoId, idx) {
         ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5'
         : 'grid grid-cols-1 gap-3';
       grid.className = cls;
-      grid.innerHTML = moments.map(m => renderMomentCard(m)).join('');
+      grid.innerHTML = moments.map((m, i) => renderMomentCard(m, i)).join('');
     }
 
     // =============================
     // MOMENT CARD
     // =============================
-    function renderMomentCard(m) {
+    function renderMomentCard(m, idx) {
+      const _idx = (idx !== undefined) ? idx : '';
       const videoId = m.VideoID || m.video_id || extractVideoId(m.YouTubeURL || m.youtube_url || '');
       const thumb = videoId ? `https://img.youtube.com/vi/${videoId}/mqdefault.jpg` : '';
       const deepLink = m.DeepLink || m.youtube_deep_link || '';
@@ -914,6 +933,10 @@ function normalizeEvent(e, videoId, idx) {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg>
             Watch at ${escHtml(timestamp)}
           </button>
+          ${_idx !== '' ? `<button class="w-full mt-2 py-2 rounded-lg text-xs uppercase tracking-wider font-bold flex items-center justify-center gap-2" style="background:#D22630;color:white;border:none;cursor:pointer;" onclick="event.stopPropagation(); openCoachMode(${_idx})">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="white"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            Coach Mode
+          </button>` : ''}
         </div>
       </div>`;
     }
@@ -1360,7 +1383,15 @@ function normalizeEvent(e, videoId, idx) {
 
     // Keyboard shortcuts
     document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape') closeGameModal();
+      if (e.key === 'Escape') {
+        if (document.getElementById('coachModeOverlay').style.display !== 'none') {
+          closeCoachMode();
+        } else {
+          closeGameModal();
+        }
+      }
+      if (e.key === 'ArrowLeft' && document.getElementById('coachModeOverlay').style.display !== 'none') coachNav(-1);
+      if (e.key === 'ArrowRight' && document.getElementById('coachModeOverlay').style.display !== 'none') coachNav(1);
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
         switchTab('search');
@@ -1368,8 +1399,99 @@ function normalizeEvent(e, videoId, idx) {
       }
     });
 
+    // =============================
+    // COACH MODE
+    // =============================
+    let coachIndex = 0;
+
+    function openCoachMode(idx) {
+      coachIndex = idx;
+      renderCoachSlide();
+      const overlay = document.getElementById('coachModeOverlay');
+      overlay.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeCoachMode() {
+      document.getElementById('coachModeOverlay').style.display = 'none';
+      document.getElementById('coachIframe').src = '';
+      document.body.style.overflow = '';
+    }
+
+    function coachNav(dir) {
+      coachIndex = Math.max(0, Math.min(currentMoments.length - 1, coachIndex + dir));
+      renderCoachSlide();
+    }
+
+    function renderCoachSlide() {
+      if (!currentMoments.length) return;
+      const m = currentMoments[coachIndex];
+      const videoId = m.VideoID || m.video_id || extractVideoId(m.YouTubeURL || m.youtube_url || '');
+      const deepLink = m.DeepLink || m.youtube_deep_link || '';
+      const chain = m.ConceptChain || m.concept_chain || '';
+      const teaching = m.TeachingPoint || m.teaching_point || '';
+      const coaching = m.CoachingCue || m.coaching_cue || '';
+
+      // Build embed src with timestamp
+      let embedSrc = '';
+      if (videoId) {
+        let startSec = 0;
+        const tsMatch = deepLink.match(/[?&]t=(\d+)/);
+        if (tsMatch) startSec = parseInt(tsMatch[1], 10);
+        embedSrc = `https://www.youtube.com/embed/${videoId}?start=${startSec}&autoplay=1&rel=0`;
+      }
+      document.getElementById('coachIframe').src = embedSrc;
+
+      // Chain display
+      const chainParts = chain.split(' > ');
+      const chainHtml = chainParts.map((p, i) =>
+        i < chainParts.length - 1
+          ? `${p} <span style="color:#D22630;opacity:0.7;">›</span> `
+          : `<strong style="color:#ccc;">${p}</strong>`
+      ).join('');
+      document.getElementById('coachChain').innerHTML = chainHtml || '';
+      document.getElementById('coachTeaching').textContent = teaching;
+      document.getElementById('coachCue').textContent = coaching ? `"${coaching}"` : '';
+
+      // Counter + nav buttons
+      document.getElementById('coachModeCounter').textContent =
+        `${coachIndex + 1} / ${currentMoments.length}`;
+      document.getElementById('coachPrevBtn').style.opacity = coachIndex === 0 ? '0.3' : '1';
+      document.getElementById('coachNextBtn').style.opacity = coachIndex === currentMoments.length - 1 ? '0.3' : '1';
+    }
+
     // Init
     switchTab('search');
   </script>
+  <!-- ===== COACH MODE OVERLAY ===== -->
+  <div id="coachModeOverlay" style="display:none; position:fixed; inset:0; z-index:50; background:#000; flex-direction:column; align-items:center; justify-content:flex-start; overflow-y:auto;">
+    <!-- Top bar -->
+    <div style="width:100%; display:flex; align-items:center; justify-content:space-between; padding:16px 24px; background:#0a0a0a; border-bottom:1px solid #222;">
+      <div style="display:flex; align-items:center; gap:12px;">
+        <span style="font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:0.1em; color:#D22630;">COACH MODE</span>
+        <span id="coachModeCounter" style="color:#666; font-size:13px; font-weight:600;"></span>
+      </div>
+      <div style="display:flex; gap:10px; align-items:center;">
+        <button id="coachPrevBtn" onclick="coachNav(-1)" style="background:#1a1a1a; border:1px solid #333; color:#ccc; border-radius:8px; padding:8px 18px; font-size:13px; font-weight:700; cursor:pointer; letter-spacing:0.05em;">← Prev</button>
+        <button id="coachNextBtn" onclick="coachNav(1)" style="background:#1a1a1a; border:1px solid #333; color:#ccc; border-radius:8px; padding:8px 18px; font-size:13px; font-weight:700; cursor:pointer; letter-spacing:0.05em;">Next →</button>
+        <button onclick="closeCoachMode()" style="background:#D22630; border:none; color:white; border-radius:8px; padding:8px 18px; font-size:13px; font-weight:700; cursor:pointer; letter-spacing:0.05em;">✕ Close</button>
+      </div>
+    </div>
+    <!-- Video -->
+    <div style="width:100%; max-width:1280px; margin:0 auto; padding:24px 24px 0;">
+      <div style="position:relative; width:100%; padding-top:56.25%; background:#0d0d0d; border-radius:12px; overflow:hidden;">
+        <iframe id="coachIframe" src="" frameborder="0" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen style="position:absolute; inset:0; width:100%; height:100%;"></iframe>
+      </div>
+    </div>
+    <!-- Coaching info panel -->
+    <div style="width:100%; max-width:1280px; margin:0 auto; padding:24px;">
+      <div id="coachInfoPanel" style="background:#111; border:1px solid #222; border-radius:12px; padding:32px;">
+        <div id="coachChain" style="font-size:13px; color:#888; font-weight:500; letter-spacing:0.03em; margin-bottom:16px;"></div>
+        <p id="coachTeaching" style="font-size:clamp(18px,2.5vw,28px); font-weight:800; color:white; line-height:1.3; margin-bottom:20px;"></p>
+        <p id="coachCue" style="font-size:clamp(15px,2vw,22px); color:#D22630; font-style:italic; font-weight:600; line-height:1.4;"></p>
+      </div>
+    </div>
+  </div>
+
 </body>
 </html>

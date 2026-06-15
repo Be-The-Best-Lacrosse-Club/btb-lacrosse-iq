@@ -33,6 +33,8 @@ export default async function handler(req, context) {
     const contentType = url.searchParams.get('content_type') || '';
     const difficulty = url.searchParams.get('difficulty') || '';
     const game = url.searchParams.get('game') || '';
+    const gender = url.searchParams.get('gender') || '';
+    const level = url.searchParams.get('level') || '';
 
     // Build Airtable filterByFormula
     const filters = [];
@@ -64,6 +66,15 @@ export default async function handler(req, context) {
     if (game) {
       const safeGame = game.replace(/'/g, "\\'");
       filters.push(`SEARCH(LOWER("${safeGame}"), LOWER({GameTitle}))`);
+    }
+
+    if (gender) {
+      const safeGender = gender.replace(/"/g, '\\"');
+      filters.push(`SEARCH(LOWER("${safeGender.toLowerCase()}"), LOWER({Level}))`)
+    }
+
+    if (level) {
+      filters.push(`{Level} = "${level.replace(/"/g, '\\"')}"`)
     }
 
     let formula = '';

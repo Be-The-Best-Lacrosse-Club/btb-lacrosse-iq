@@ -1,1 +1,9 @@
-node_modules/\n.env\n.env.local\n.netlify/
+node_modules/
+.env
+.env.local
+.netlify/
+__pycache__/
+*.bak
+scout.py
+netlify/functions/
+
