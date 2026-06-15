@@ -26,6 +26,14 @@ export default async function handler(req, context) {
     });
   }
 
+
+  // Debug endpoint
+  const debugParam = new URL(req.url).searchParams.get('debug');
+  if (debugParam === 'patcheck') {
+    const checkPat = Deno.env.get('AIRTABLE_PAT');
+    return new Response(JSON.stringify({ pat_len: checkPat.length, pat_suffix: checkPat.slice(-6), env_set: !!Deno.env.get('AIRTABLE_PAT') }), { headers: corsHeaders });
+  }
+
   try {
     const url = new URL(req.url);
     const q = url.searchParams.get('q') || '';
