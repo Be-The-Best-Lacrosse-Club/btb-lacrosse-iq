@@ -2,6 +2,11 @@
   publish = "."
   command = "echo 'No build step required'"
 
+# Keep these: /api/analyze-video is LIVE in production (deployed 2026-06-15) but
+# its source is gitignored via netlify/functions/ and is not in this repo, so
+# the only surviving copy is the deployed bundle on Netlify. Dropping the
+# directory declaration or the 60s timeout would break it on the next deploy.
+# TODO: recover the source from Netlify, commit it, and un-ignore the directory.
 [functions]
   directory = "netlify/functions"
 
@@ -20,12 +25,9 @@
   function = "list-games"
   path = "/api/list-games"
 
-[[headers]]
-  for = "/api/*"
-  [headers.values]
-    Access-Control-Allow-Origin = "*"
-    Access-Control-Allow-Methods = "GET, POST, OPTIONS"
-    Access-Control-Allow-Headers = "Content-Type, Authorization"
+# No blanket CORS header for /api/* — a static "*" here would re-open what the
+# edge functions are deliberately restricting. Each function sets its own
+# Access-Control-Allow-Origin from its allowlist.
 
 [[headers]]
   for = "/*"
