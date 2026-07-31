@@ -14,10 +14,10 @@ const corsHeaders = {
 // and cap length so untrusted input cannot alter or bloat the formula.
 function lit(value) {
   return String(value)
+    .slice(0, 200)
     .replace(/\\/g, '\\\\')
     .replace(/"/g, '\\"')
-    .replace(/[\r\n]/g, ' ')
-    .slice(0, 200);
+    .replace(/[\r\n]/g, ' ');
 }
 
 export default async function handler(req, context) {
