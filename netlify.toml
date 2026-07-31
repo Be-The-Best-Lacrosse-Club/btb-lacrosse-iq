@@ -2,12 +2,6 @@
   publish = "."
   command = "echo 'No build step required'"
 
-[functions]
-  directory = "netlify/functions"
-
-[functions."analyze-video"]
-  timeout = 60
-
 [[edge_functions]]
   function = "save-moments"
   path = "/api/save-moments"
@@ -20,12 +14,9 @@
   function = "list-games"
   path = "/api/list-games"
 
-[[headers]]
-  for = "/api/*"
-  [headers.values]
-    Access-Control-Allow-Origin = "*"
-    Access-Control-Allow-Methods = "GET, POST, OPTIONS"
-    Access-Control-Allow-Headers = "Content-Type, Authorization"
+# No blanket CORS header for /api/* — a static "*" here would re-open what the
+# edge functions are deliberately restricting. Each function sets its own
+# Access-Control-Allow-Origin from its allowlist.
 
 [[headers]]
   for = "/*"

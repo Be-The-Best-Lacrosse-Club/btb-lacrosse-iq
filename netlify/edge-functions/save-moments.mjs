@@ -2,20 +2,46 @@ const AIRTABLE_BASE = 'appvLo6AOYhFmBsQ9';
 const AIRTABLE_TABLE = 'LacrosseIQ';
 const AIRTABLE_API = 'https://api.airtable.com/v0';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-  'Content-Type': 'application/json',
-};
+// This endpoint writes into the main production base, which also holds Players,
+// Payments, Waivers and Staff Auth. It is called from the browser, so there is
+// no client secret to check — a key shipped in index.html is not a secret.
+// What we can do is require the request to come from one of our own pages.
+// Browsers always send Origin on a POST; curl and scripted abuse do not.
+const ALLOWED_ORIGINS = [
+  'https://btb-lacrosse-iq.netlify.app',
+  'https://os.bethebestli.com',
+  'https://www.bethebestli.com',
+  'http://localhost:8888',
+];
+
+// Airtable batch-creates 10 per request; this bounds how many round trips one
+// caller can drive, and with it how much they can write in a single call.
+const MAX_MOMENTS = 200;
+
+function headersFor(origin) {
+  return {
+    'Access-Control-Allow-Origin': ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0],
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Vary': 'Origin',
+    'Content-Type': 'application/json',
+  };
+}
 
 export default async function handler(req, context) {
+  const origin = req.headers.get('origin') || '';
+  const corsHeaders = headersFor(origin);
+
   if (req.method === 'OPTIONS') {
     return new Response(null, { status: 204, headers: corsHeaders });
   }
 
   if (req.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405, headers: corsHeaders });
+  }
+
+  if (!ALLOWED_ORIGINS.includes(origin)) {
+    return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: corsHeaders });
   }
 
   const pat = Deno.env.get('AIRTABLE_PAT');
@@ -33,6 +59,13 @@ export default async function handler(req, context) {
     if (!moments || !Array.isArray(moments) || moments.length === 0) {
       return new Response(JSON.stringify({ error: 'moments array is required' }), {
         status: 400,
+        headers: corsHeaders,
+      });
+    }
+
+    if (moments.length > MAX_MOMENTS) {
+      return new Response(JSON.stringify({ error: `moments array exceeds the ${MAX_MOMENTS} limit` }), {
+        status: 413,
         headers: corsHeaders,
       });
     }

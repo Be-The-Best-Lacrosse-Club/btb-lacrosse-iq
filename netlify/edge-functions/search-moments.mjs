@@ -9,6 +9,14 @@ const corsHeaders = {
   'Content-Type': 'application/json',
 };
 
+// Airtable formula string literals have NO escape sequence — a backslash is a
+// literal backslash, so `"` cannot be escaped into a double-quoted literal.
+// The only safe move is to drop the quote characters entirely rather than try
+// to escape them. Also caps length so a huge q can't blow up the formula.
+function lit(value) {
+  return String(value).replace(/["'\\]/g, '').slice(0, 200);
+}
+
 export default async function handler(req, context) {
   if (req.method === 'OPTIONS') {
     return new Response(null, { status: 204, headers: corsHeaders });
@@ -26,14 +34,6 @@ export default async function handler(req, context) {
     });
   }
 
-
-  // Debug endpoint
-  const debugParam = new URL(req.url).searchParams.get('debug');
-  if (debugParam === 'patcheck') {
-    const checkPat = Deno.env.get('AIRTABLE_PAT');
-    return new Response(JSON.stringify({ pat_len: checkPat.length, pat_suffix: checkPat.slice(-6), env_set: !!Deno.env.get('AIRTABLE_PAT') }), { headers: corsHeaders });
-  }
-
   try {
     const url = new URL(req.url);
     const q = url.searchParams.get('q') || '';
@@ -48,7 +48,7 @@ export default async function handler(req, context) {
     const filters = [];
 
     if (q) {
-      const safeQ = q.replace(/'/g, "\\'");
+      const safeQ = lit(q);
       filters.push(`OR(
         SEARCH(LOWER("${safeQ}"), LOWER({ConceptChain})),
         SEARCH(LOWER("${safeQ}"), LOWER({ConceptTags})),
@@ -60,29 +60,27 @@ export default async function handler(req, context) {
     }
 
     if (category) {
-      filters.push(`{SkillCategory} = "${category.replace(/"/g, '\\"')}"`);
+      filters.push(`{SkillCategory} = "${lit(category)}"`);
     }
 
     if (contentType) {
-      filters.push(`{ContentType} = "${contentType.replace(/"/g, '\\"')}"`);
+      filters.push(`{ContentType} = "${lit(contentType)}"`);
     }
 
     if (difficulty) {
-      filters.push(`{Difficulty} = "${difficulty.replace(/"/g, '\\"')}"`);
+      filters.push(`{Difficulty} = "${lit(difficulty)}"`);
     }
 
     if (game) {
-      const safeGame = game.replace(/'/g, "\\'");
-      filters.push(`SEARCH(LOWER("${safeGame}"), LOWER({GameTitle}))`);
+      filters.push(`SEARCH(LOWER("${lit(game)}"), LOWER({GameTitle}))`);
     }
 
     if (gender) {
-      const safeGender = gender.replace(/"/g, '\\"');
-      filters.push(`SEARCH(LOWER("${safeGender.toLowerCase()}"), LOWER({Level}))`)
+      filters.push(`SEARCH(LOWER("${lit(gender).toLowerCase()}"), LOWER({Level}))`)
     }
 
     if (level) {
-      filters.push(`{Level} = "${level.replace(/"/g, '\\"')}"`)
+      filters.push(`{Level} = "${lit(level)}"`)
     }
 
     let formula = '';
