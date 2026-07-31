@@ -2,6 +2,17 @@
   publish = "."
   command = "echo 'No build step required'"
 
+# Keep these: /api/analyze-video is LIVE in production (deployed 2026-06-15) but
+# its source is gitignored via netlify/functions/ and is not in this repo, so
+# the only surviving copy is the deployed bundle on Netlify. Dropping the
+# directory declaration or the 60s timeout would break it on the next deploy.
+# TODO: recover the source from Netlify, commit it, and un-ignore the directory.
+[functions]
+  directory = "netlify/functions"
+
+[functions."analyze-video"]
+  timeout = 60
+
 [[edge_functions]]
   function = "save-moments"
   path = "/api/save-moments"
