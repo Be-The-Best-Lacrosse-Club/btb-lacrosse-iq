@@ -39,11 +39,11 @@ git log --oneline
 
 `/api/analyze-video` is deployed and serving, but `netlify/functions/` is
 gitignored, so its source is not here and not in any known clone. The only
-surviving copy is the deployed bundle on Netlify. **Recover it from the Netlify
-dashboard, commit it, and remove `netlify/functions/` from `.gitignore` before
-that bundle is replaced.** The `[functions]` blocks in `netlify.toml` are kept
-deliberately for this reason — removing them would break that function's 60s
-timeout on the next deploy.
+surviving copy is the deployed bundle on Netlify. **Do not run another
+production deploy until it has been recovered from the Netlify dashboard,
+committed, and `netlify/functions/` has been removed from `.gitignore`.** The
+`[functions]` declarations in `netlify.toml` configure a source file; they do
+not preserve an already-deployed bundle when that source is missing.
 
 ## Unwired code
 
@@ -61,9 +61,10 @@ but don't assume the site is using them, because it isn't.
 Waivers and Staff Auth. It is called from the browser, so it has no client
 secret; it is guarded by an origin allowlist and a 200-item cap. **That is
 abuse protection, not authentication** — `Origin` is forgeable outside a
-browser. The durable fix is an Airtable PAT scoped to the `LacrosseIQ` table
-only, so this endpoint cannot reach the other tables at all.
+browser. Airtable PAT resources can be restricted to a base or workspace, not
+to one table. The durable fix is to move `LacrosseIQ` into a dedicated base and
+scope this site's minimum-permission PAT to that base.
 
-Airtable formula string literals have no escape sequence. When interpolating
-user input into `filterByFormula`, strip quote characters — do not try to
-escape them. See `lit()` in `search-moments.mjs`.
+Airtable formula double-quoted string literals support backslash escaping.
+`lit()` in `search-moments.mjs` escapes backslashes and embedded double quotes
+before interpolating bounded user input into `filterByFormula`.
