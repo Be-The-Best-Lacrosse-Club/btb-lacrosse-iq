@@ -9,12 +9,15 @@ const corsHeaders = {
   'Content-Type': 'application/json',
 };
 
-// Airtable formula string literals have NO escape sequence — a backslash is a
-// literal backslash, so `"` cannot be escaped into a double-quoted literal.
-// The only safe move is to drop the quote characters entirely rather than try
-// to escape them. Also caps length so a huge q can't blow up the formula.
+// Airtable formula double-quoted string literals use backslash escaping.
+// Escape existing backslashes first, then embedded quotes; flatten line breaks
+// and cap length so untrusted input cannot alter or bloat the formula.
 function lit(value) {
-  return String(value).replace(/["'\\]/g, '').slice(0, 200);
+  return String(value)
+    .slice(0, 200)
+    .replace(/\\/g, '\\\\')
+    .replace(/"/g, '\\"')
+    .replace(/[\r\n]/g, ' ');
 }
 
 export default async function handler(req, context) {
